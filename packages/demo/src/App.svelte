@@ -3,12 +3,10 @@
 </script>
 
 <main>
-	<h1>Hello World!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<h1>Подбор автомобиля</h1>
+	<p>Демо-страница для виджета чат-бота. Нажмите на иконку чата в правом нижнем углу.</p>
 
-	<p class="container">
-		<my-component></my-component>
-	</p>
+	<chat-widget username="Богдан Корж"></chat-widget>
 </main>
 
 <style>
@@ -29,11 +27,6 @@
 	@media (min-width: 640px) {
 		main {
 			max-width: none;
-		}
-
-		.container {
-			display: inline-block;
-			max-width: 320px;
 		}
 	}
 </style>

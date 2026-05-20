@@ -1,1 +1,1 @@
-export { default as MyComponent } from "./src/MyComponent.wc.svelte";
+export { default as ChatWidget } from "./src/ChatWidget.wc.svelte";
