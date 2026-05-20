@@ -5,37 +5,25 @@
 	"trailingComma": "none",
 	"overrides": [
 		{
-			"files": [
-				"*.html",
-				"*.htm"
-			],
+			"files": ["*.html", "*.htm"],
 			"options": {
 				"parser": "html"
 			}
 		},
 		{
-			"files": [
-				"*.css",
-				"*.scss"
-			],
+			"files": ["*.css", "*.scss"],
 			"options": {
 				"parser": "css"
 			}
 		},
 		{
-			"files": [
-				"*.js",
-				"*.jsx"
-			],
+			"files": ["*.js", "*.jsx"],
 			"options": {
 				"parser": "babel"
 			}
 		},
 		{
-			"files": [
-				"*.ts",
-				"*.tsx"
-			],
+			"files": ["*.ts", "*.tsx"],
 			"options": {
 				"parser": "typescript"
 			}
@@ -47,7 +35,5 @@
 			}
 		}
 	],
-	"plugins": [
-		"prettier-plugin-svelte"
-	]
+	"plugins": ["prettier-plugin-svelte"]
 }
