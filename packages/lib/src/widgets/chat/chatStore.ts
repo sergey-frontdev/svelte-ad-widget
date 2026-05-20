@@ -9,7 +9,7 @@ import {
 	fallbackAnswer,
 	specialistGreeting,
 	waitingForSpecialist
-} from "./mock/carQA";
+} from "./carQA";
 
 export type Sender = "user" | "bot" | "specialist";
 
