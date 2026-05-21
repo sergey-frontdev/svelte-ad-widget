@@ -5,22 +5,28 @@
 	import "./AdWidget.wc.svelte";
 
 	export let theme: "light" | "dark" = "light";
-	export let variant: "v1" | "v2" = "v1";
-	export let title = "";
-	export let price = "";
-	export let cta = "";
+	export let variant: "long" | "short" | "mobile" = "long";
+
+	// Promo card content (undefined → widget keeps its built-in default).
+	export let image: string | undefined = undefined;
+	export let title: string | undefined = undefined;
+	export let description: string | undefined = undefined;
+	export let cta: string | undefined = undefined;
+	export let domain: string | undefined = undefined;
+	export let href: string | undefined = undefined;
+	// Tooltip ("О рекламодателе") text (legal + ИНН + ID, single field).
+	export let legal: string | undefined = undefined;
 
 	// Only forward overrides that are actually set, so the widget keeps its
 	// built-in default content otherwise.
-	$: attrs = {
-		theme,
-		variant,
-		...(title ? { title } : {}),
-		...(price ? { price } : {}),
-		...(cta ? { cta } : {})
-	};
+	$: attrs = Object.fromEntries(
+		Object.entries({ theme, variant, image, title, description, cta, domain, href, legal }).filter(
+			([, v]) => v !== undefined && v !== ""
+		)
+	);
 </script>
 
+<!--wants be with dark mode decorator-->
 <div class="stage" class:dark-bg={theme === "dark"}>
 	<ad-widget {...attrs} />
 </div>

@@ -1,24 +1,14 @@
-// Demo content for the ad widget. In a real ad network these values arrive from
-// the ad server; here they are bundled as sensible defaults so the widget renders
-// out of the box. Images are referenced by their CDN URL directly (standard
-// practice for ad creatives — the network serves the asset, the creative links it).
-
 export interface Advertiser {
-	/** Legal disclaimer shown at the top of the tooltip. */
+	/** Full disclosure text shown in the "О рекламодателе" tooltip (legal + ИНН + ID). */
 	legal: string;
-	inn: string;
-	/** Public ad identifier, e.g. "#000000001". */
-	id: string;
 }
 
-/** Product card creative: framed image + price (heading) + description. */
 export interface Creative {
 	image: string;
 	price: string;
 	title: string;
 }
 
-/** Promo card creative: image + text + call-to-action (a separate card subtype). */
 export interface PromoCard {
 	image: string;
 	title: string;
@@ -27,16 +17,9 @@ export interface PromoCard {
 }
 
 export interface AdContent {
-	/** Advertiser site shown in the product-card header. */
 	domain: string;
-	/** Landing page. */
 	href: string;
-	/**
-	 * Product creatives (variant "v1"): shown as a double card on desktop and
-	 * collapsed to a single card on mobile.
-	 */
 	products: Creative[];
-	/** Promo card (variant "v2") — a different card subtype, e.g. the Audi creative. */
 	promo: PromoCard;
 	advertiser: Advertiser;
 }
@@ -53,24 +36,22 @@ export const adContent: AdContent = {
 	products: [
 		{
 			image: IMG.cat,
-			price: "25 843 567,50 ₽",
-			title: "Дизельная электростанция Caterpillar DE715 GC (520 кВт)"
+			price: "16 843 567,50 ₽",
+			title: "Автобус Youtong ZK6116HG"
 		},
 		{
 			image: IMG.weichai,
 			price: "14 556 523,07 ₽",
-			title: "Дизельная электростанция Weichai WPG825 B7 (600 кВт)"
+			title: "Автобус Youtong ZK6112 H9"
 		}
 	],
 	promo: {
 		image: IMG.audi,
-		title: "Audi A7 Sportback — в наличии у дилера",
-		price: "от 5 990 000 ₽ · кредит 0,01%",
+		title: "Audi A6 — в наличии у дилера",
+		price: "от 4 990 000 ₽ · кредит 16,01%",
 		cta: "Перейти на сайт"
 	},
 	advertiser: {
-		legal: "Финансовые услуги оказывает ООО «Тут могла быть ваша компания Общество с ограниченной ответственностью»",
-		inn: "00000000001",
-		id: "#000000001"
+		legal: "Финансовые услуги оказывает ООО «Тут могла быть ваша компания - Общество с ограниченной ответственностью»\nИНН — 00000000001, ID: #000000001"
 	}
 };

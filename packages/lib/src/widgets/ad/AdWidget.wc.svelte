@@ -1,39 +1,37 @@
 <svelte:options tag="ad-widget" />
 
 <script lang="ts">
-	import { onMount } from "svelte";
 	import { adContent } from "./adContent";
 
 	// Props (lowercase — HTML attributes can't be camelCase on custom elements)
 	export let theme: "light" | "dark" = "light";
 	/**
-	 * "v1" — product card: double on desktop, collapses to single on mobile.
-	 * "v2" — promo card subtype (image + text + CTA), e.g. the Audi creative.
+	 * Layout, chosen explicitly (no viewport sniffing — so it renders the same in
+	 * Storybook docs as in Canvas):
+	 * "long"   — desktop product card showing both buses.
+	 * "short"  — desktop product card showing a single bus.
+	 * "mobile" — mobile promo card (image + text + CTA), e.g. the Audi creative.
 	 */
-	export let variant: "v1" | "v2" = "v1";
+	export let variant: "long" | "short" | "mobile" = "long";
 
 	// Content (defaults from adContent; overridable per-attribute, like a real ad tag)
 	export let href = adContent.href;
 	export let domain = adContent.domain;
 	export let legal = adContent.advertiser.legal;
-	export let inn = adContent.advertiser.inn;
-	export let adid = adContent.advertiser.id;
 
-	const promo = adContent.promo;
-	// v1 shows both products on desktop, but collapses to a single card on mobile.
-	$: products = isMobile ? adContent.products.slice(0, 1) : adContent.products;
+	// Promo card (mobile) content — editable per-attribute.
+	export let image = adContent.promo.image;
+	export let title = adContent.promo.title;
+	export let description = adContent.promo.price;
+	export let cta = adContent.promo.cta;
 
-	let isMobile = false;
+	// The promo card (Audi) is the mobile layout; "long"/"short" are desktop.
+	$: showPromo = variant === "mobile";
+	// "short" shows a single bus, "long" shows both.
+	$: products = variant === "short" ? adContent.products.slice(0, 1) : adContent.products;
+
 	let menuOpen = false;
 	let hidden = false;
-
-	onMount(() => {
-		const mq = window.matchMedia("(max-width: 600px)");
-		const apply = () => (isMobile = mq.matches);
-		apply();
-		mq.addEventListener("change", apply);
-		return () => mq.removeEventListener("change", apply);
-	});
 
 	function hideAd() {
 		hidden = true;
@@ -52,11 +50,16 @@
 </script>
 
 {#if !hidden}
-	<div class="ad {theme}" class:mobile={isMobile} class:desktop={!isMobile}>
-		{#if variant === "v2"}
+	<div class="ad {theme}" class:mobile={showPromo} class:desktop={!showPromo}>
+		{#if showPromo}
 			<!-- promo card: overlay badges on the square creative -->
 			<span class="badge label">Реклама</span>
-			<button class="badge dots" class:vertical={isMobile} on:click={() => (menuOpen = !menuOpen)} aria-label="Меню рекламы">
+			<button
+				class="badge dots"
+				class:vertical={showPromo}
+				on:click={() => (menuOpen = !menuOpen)}
+				aria-label="Меню рекламы"
+			>
 				<span class="dot" /><span class="dot" /><span class="dot" />
 			</button>
 		{:else}
@@ -85,12 +88,14 @@
 						<line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" />
 					</svg>
 				</button>
-				<p class="tooltip-legal">{legal}<br />ИНН — {inn}, ID: {adid}</p>
+				<p class="tooltip-legal">{legal}</p>
 
 				<button class="tooltip-action" on:click={hideAd}>
 					<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 						<path d="M3 3 L21 21" />
-						<path d="M10.6 5.1 A9.7 9.7 0 0 1 12 5 c5 0 9 4.5 10 7 -0.5 1.2 -1.6 2.8 -3.2 4.1 M6.5 6.7 C4 8.2 2.5 10.4 2 12 c1 2.5 5 7 10 7 a9.6 9.6 0 0 0 3.6 -0.7" />
+						<path
+							d="M10.6 5.1 A9.7 9.7 0 0 1 12 5 c5 0 9 4.5 10 7 -0.5 1.2 -1.6 2.8 -3.2 4.1 M6.5 6.7 C4 8.2 2.5 10.4 2 12 c1 2.5 5 7 10 7 a9.6 9.6 0 0 0 3.6 -0.7"
+						/>
 						<path d="M9.5 9.6 a3.4 3.4 0 0 0 4.9 4.8" />
 					</svg>
 					Скрыть объявление
@@ -128,13 +133,13 @@
 			</div>
 		{/if}
 
-		{#if variant === "v2"}
+		{#if showPromo}
 			<a class="creative" {href} target="_blank" rel="noopener noreferrer">
-				<img class="img square" src={promo.image} alt={promo.title} loading="lazy" />
+				<img class="img square" src={image} alt={title} loading="lazy" />
 				<div class="body">
-					<p class="m-title">{promo.title}</p>
-					<p class="m-price">{promo.price}</p>
-					<span class="m-cta">{promo.cta}</span>
+					<p class="m-title">{title}</p>
+					<p class="m-price">{description}</p>
+					<span class="m-cta">{cta}</span>
 				</div>
 			</a>
 		{:else}
@@ -157,7 +162,12 @@
 	:host {
 		display: inline-block;
 		background: transparent;
-		font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+		font-family:
+			system-ui,
+			-apple-system,
+			"Segoe UI",
+			Roboto,
+			sans-serif;
 	}
 	* {
 		box-sizing: border-box;
@@ -253,8 +263,8 @@
 		cursor: pointer;
 	}
 	.bar-dots .dot {
-		width: 3.5px;
-		height: 3.5px;
+		width: 4px;
+		height: 4px;
 		border-radius: 50%;
 		background: var(--dots-color);
 	}
@@ -295,7 +305,7 @@
 	}
 	.dots.vertical {
 		flex-direction: column;
-		gap: 2.5px;
+		gap: 3px;
 		width: 26px;
 		height: 26px;
 		border-radius: 50%;
@@ -343,6 +353,7 @@
 		font-size: 11px;
 		line-height: 1.45;
 		color: var(--legal-color);
+		white-space: pre-line;
 	}
 	.tooltip-action {
 		display: flex;
@@ -390,7 +401,7 @@
 	}
 	.frame {
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 10px;
 		overflow: hidden;
 		background: #ffffff;
 	}
