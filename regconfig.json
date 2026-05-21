@@ -1,8 +1,9 @@
 {
 	"core": {
+		"thresholdRate": 0.01,
 		"workingDir": ".reg",
 		"actualDir": "__screenshots__",
-		"thresholdRate": 0,
+		"matchingThreshold": 0.05,
 		"ximgdiff": {
 			"invocationType": "client"
 		}

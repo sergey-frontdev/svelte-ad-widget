@@ -17,7 +17,7 @@
 		"storybook": "storybook dev -p 6006",
 		"build-sb": "storybook build",
 		"serve-sb": "http-server storybook-static -p 6006",
-		"vrt:capture": "npm run build-sb && concurrently --kill-others \"npm run serve-sb\" \"wait-on http://localhost:6006 && node scripts/storycap.mjs\"",
+		"vrt:capture": "npm run build-sb && concurrently --kill-others --success command-1 --names serve,cap \"npm run serve-sb\" \"wait-on http://localhost:6006 && node scripts/storycap.mjs\"",
 		"vrt": "npm run vrt:capture && reg-suit run",
 		"vrt:approve": "rm -rf .reg/expected && mkdir -p .reg/expected && cp -R __screenshots__/. .reg/expected/"
 	},
