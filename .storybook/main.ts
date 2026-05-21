@@ -16,6 +16,21 @@ const config: StorybookConfig = {
 		const { svelte } = await import("@sveltejs/vite-plugin-svelte");
 		const sveltePreprocess = (await import("svelte-preprocess")).default;
 
+		// storycap's "browser"/ESM build (lib-esm) ships bare `require(...)` calls.
+		// Vite's dev esbuild prebundle rewrites them, but the production Rollup build
+		// leaves them intact — crashing the served preview with "require is not defined".
+		// Force resolution to the CJS entry so @rollup/plugin-commonjs transforms it.
+		const { createRequire } = await import("node:module");
+		const storycapCjs = createRequire(import.meta.url).resolve("storycap");
+		viteConfig.resolve = viteConfig.resolve ?? {};
+		const existingAlias = viteConfig.resolve.alias ?? [];
+		viteConfig.resolve.alias = [
+			...(Array.isArray(existingAlias)
+				? existingAlias
+				: Object.entries(existingAlias).map(([find, replacement]) => ({ find, replacement }))),
+			{ find: /^storycap$/, replacement: storycapCjs }
+		];
+
 		viteConfig.plugins = (viteConfig.plugins ?? [])
 			.flat(Infinity)
 			.filter(
