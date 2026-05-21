@@ -6,21 +6,22 @@
 
 	// Props (lowercase — HTML attributes can't be camelCase on custom elements)
 	export let theme: "light" | "dark" = "light";
-	/** Desktop layout: "v1" = two stacked creatives, "v2" = single creative. */
+	/**
+	 * "v1" — product card: double on desktop, collapses to single on mobile.
+	 * "v2" — promo card subtype (image + text + CTA), e.g. the Audi creative.
+	 */
 	export let variant: "v1" | "v2" = "v1";
 
 	// Content (defaults from adContent; overridable per-attribute, like a real ad tag)
-	export let title = adContent.title;
-	export let price = adContent.price;
-	export let cta = adContent.cta;
 	export let href = adContent.href;
-	export let mobileimage = adContent.mobileImage;
-	export let desktopimage1 = adContent.desktopImagesV1[0];
-	export let desktopimage2 = adContent.desktopImagesV1[1];
-	export let desktopimagev2 = adContent.desktopImageV2;
+	export let domain = adContent.domain;
 	export let legal = adContent.advertiser.legal;
 	export let inn = adContent.advertiser.inn;
 	export let adid = adContent.advertiser.id;
+
+	const promo = adContent.promo;
+	// v1 shows both products on desktop, but collapses to a single card on mobile.
+	$: products = isMobile ? adContent.products.slice(0, 1) : adContent.products;
 
 	let isMobile = false;
 	let menuOpen = false;
@@ -52,13 +53,28 @@
 
 {#if !hidden}
 	<div class="ad {theme}" class:mobile={isMobile} class:desktop={!isMobile}>
-		<!-- "Реклама" label -->
-		<span class="badge label">Реклама</span>
-
-		<!-- options trigger -->
-		<button class="badge dots" class:vertical={isMobile} on:click={() => (menuOpen = !menuOpen)} aria-label="Меню рекламы">
-			<span class="dot" /><span class="dot" /><span class="dot" />
-		</button>
+		{#if variant === "v2"}
+			<!-- promo card: overlay badges on the square creative -->
+			<span class="badge label">Реклама</span>
+			<button class="badge dots" class:vertical={isMobile} on:click={() => (menuOpen = !menuOpen)} aria-label="Меню рекламы">
+				<span class="dot" /><span class="dot" /><span class="dot" />
+			</button>
+		{:else}
+			<!-- product card: header bar -->
+			<header class="bar">
+				<span class="rek">Реклама</span>
+				<span class="domain">
+					<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+						<circle cx="12" cy="12" r="9" />
+						<path d="M3 12 H21 M12 3 a14 14 0 0 1 0 18 M12 3 a14 14 0 0 0 0 18" />
+					</svg>
+					{domain}
+				</span>
+				<button class="bar-dots" on:click={() => (menuOpen = !menuOpen)} aria-label="Меню рекламы">
+					<span class="dot" /><span class="dot" /><span class="dot" />
+				</button>
+			</header>
+		{/if}
 
 		{#if menuOpen}
 			<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
@@ -112,21 +128,28 @@
 			</div>
 		{/if}
 
-		<a class="creative" {href} target="_blank" rel="noopener noreferrer">
-			{#if isMobile}
-				<img class="img square" src={mobileimage} alt={title} loading="lazy" />
+		{#if variant === "v2"}
+			<a class="creative" {href} target="_blank" rel="noopener noreferrer">
+				<img class="img square" src={promo.image} alt={promo.title} loading="lazy" />
 				<div class="body">
-					<p class="m-title">{title}</p>
-					<p class="m-price">{price}</p>
-					<span class="m-cta">{cta}</span>
+					<p class="m-title">{promo.title}</p>
+					<p class="m-price">{promo.price}</p>
+					<span class="m-cta">{promo.cta}</span>
 				</div>
-			{:else if variant === "v1"}
-				<img class="img" src={desktopimage1} alt={title} loading="lazy" />
-				<img class="img" src={desktopimage2} alt={title} loading="lazy" />
-			{:else}
-				<img class="img" src={desktopimagev2} alt={title} loading="lazy" />
-			{/if}
-		</a>
+			</a>
+		{:else}
+			<div class="creatives">
+				{#each products as c (c.image)}
+					<a class="creative" {href} target="_blank" rel="noopener noreferrer">
+						<div class="frame">
+							<img class="img" src={c.image} alt={c.title} loading="lazy" />
+						</div>
+						<p class="c-price">{c.price}</p>
+						<p class="c-title">{c.title}</p>
+					</a>
+				{/each}
+			</div>
+		{/if}
 	</div>
 {/if}
 
@@ -142,13 +165,15 @@
 
 	.ad {
 		position: relative;
+		width: 240px;
 		max-width: 240px;
 		background: transparent;
 		/* light theme tokens (default) */
-		--border: #d9d9de;
+		--border: #e2e2e6;
 		--plate-bg: #ffffff;
 		--label-color: #b6b9bf;
 		--dots-color: #9aa0a6;
+		--domain-color: #4a4d52;
 		--tooltip-bg: #ffffff;
 		--tooltip-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
 		--legal-color: #6b7488;
@@ -163,6 +188,7 @@
 		--plate-bg: #2a2a2e;
 		--label-color: #777a82;
 		--dots-color: #a7abb3;
+		--domain-color: #cfd2d8;
 		--tooltip-bg: #232327;
 		--tooltip-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
 		--legal-color: #9aa7c0;
@@ -176,15 +202,64 @@
 	/* desktop gets the gray frame */
 	.ad.desktop {
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 14px;
 		overflow: hidden;
 	}
 	.ad.mobile {
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		overflow: hidden;
 	}
 
-	/* ---- Badges ---- */
+	/* ---- Desktop header bar ---- */
+	.bar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 12px;
+	}
+	.rek {
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.6px;
+		text-transform: uppercase;
+		color: var(--label-color);
+		white-space: nowrap;
+	}
+	.domain {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		font-size: 12px;
+		color: var(--domain-color);
+		overflow: hidden;
+		white-space: nowrap;
+	}
+	.domain svg {
+		flex: 0 0 auto;
+		fill: none;
+		stroke: var(--dots-color);
+		stroke-width: 1.4;
+	}
+	.bar-dots {
+		display: flex;
+		gap: 3px;
+		align-items: center;
+		background: transparent;
+		border: none;
+		padding: 4px 2px;
+		cursor: pointer;
+	}
+	.bar-dots .dot {
+		width: 3.5px;
+		height: 3.5px;
+		border-radius: 50%;
+		background: var(--dots-color);
+	}
+
+	/* ---- Mobile overlay badges ---- */
 	.badge {
 		position: absolute;
 		top: 8px;
@@ -195,7 +270,7 @@
 	}
 	.label {
 		left: 8px;
-		padding: 2px 5px;
+		padding: 2px 8px;
 		border-radius: 10px;
 		font-size: 9px;
 		font-weight: 700;
@@ -205,11 +280,11 @@
 	.dots {
 		right: 8px;
 		display: flex;
+		padding: 4px 8px;
+		border-radius: 10px;
 		gap: 3px;
 		align-items: center;
 		justify-content: center;
-		padding: 6px 9px;
-		border-radius: 10px;
 		cursor: pointer;
 	}
 	.dots .dot {
@@ -222,8 +297,8 @@
 		flex-direction: column;
 		gap: 2.5px;
 		width: 26px;
-		border-radius: 50%;
 		height: 26px;
+		border-radius: 50%;
 		padding: 0;
 	}
 
@@ -305,10 +380,19 @@
 		align-self: flex-start;
 	}
 
-	/* ---- Creative ---- */
+	/* ---- Creatives ---- */
 	.creative {
 		display: block;
 		text-decoration: none;
+	}
+	.creatives .creative {
+		padding: 0 12px 14px;
+	}
+	.frame {
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		overflow: hidden;
+		background: #ffffff;
 	}
 	.img {
 		display: block;
@@ -319,6 +403,21 @@
 		aspect-ratio: 1 / 1;
 		object-fit: cover;
 	}
+	.c-price {
+		margin: 10px 0 4px;
+		font-size: 18px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: var(--text);
+	}
+	.c-title {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.35;
+		color: var(--text);
+	}
+
+	/* mobile body */
 	.body {
 		padding: 10px 12px 12px;
 	}

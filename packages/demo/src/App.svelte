@@ -12,7 +12,7 @@
 			<ad-widget theme="light" variant="v1"></ad-widget>
 		</div>
 		<div class="ad-cell">
-			<h2>Светлая · v2</h2>
+			<h2>Светлая · v2 (Audi)</h2>
 			<ad-widget theme="light" variant="v2"></ad-widget>
 		</div>
 		<div class="ad-cell dark-bg">
@@ -20,7 +20,7 @@
 			<ad-widget theme="dark" variant="v1"></ad-widget>
 		</div>
 		<div class="ad-cell dark-bg">
-			<h2>Тёмная · v2</h2>
+			<h2>Тёмная · v2 (Audi)</h2>
 			<ad-widget theme="dark" variant="v2"></ad-widget>
 		</div>
 	</section>

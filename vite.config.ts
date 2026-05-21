@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { transform } from "esbuild";
+// @ts-ignore
 import pkg from "./package.json";
 
 const bundleComponents = process.env.BUNDLE_COMPONENTS ?? true;
