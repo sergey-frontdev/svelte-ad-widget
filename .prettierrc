@@ -11,6 +11,9 @@
 			}
 		},
 		{
+			"files": ["*.yml", "*.yaml"],
+		},
+		{
 			"files": ["*.css", "*.scss"],
 			"options": {
 				"parser": "css"
