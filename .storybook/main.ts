@@ -2,7 +2,7 @@ import type { StorybookConfig } from "@storybook/svelte-vite";
 
 const config: StorybookConfig = {
 	stories: ["../packages/**/*.stories.@(js|ts|svelte)"],
-	addons: ["@storybook/addon-essentials"],
+	addons: ["@storybook/addon-essentials", "storycap"],
 	framework: {
 		name: "@storybook/svelte-vite",
 		options: {}
@@ -18,7 +18,9 @@ const config: StorybookConfig = {
 
 		viteConfig.plugins = (viteConfig.plugins ?? [])
 			.flat(Infinity)
-			.filter((p) => !(p && typeof p === "object" && "name" in p && String(p.name).startsWith("vite-plugin-svelte")));
+			.filter(
+				(p) => !(p && typeof p === "object" && "name" in p && String(p.name).startsWith("vite-plugin-svelte"))
+			);
 
 		viteConfig.plugins.push(
 			svelte({

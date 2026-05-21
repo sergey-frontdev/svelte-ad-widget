@@ -13,6 +13,13 @@ dist-ssr
 *.local
 TODO
 
+# Storybook / visual regression
+storybook-static
+__screenshots__
+# reg-suit working dir — keep only the committed baseline (expected)
+.reg/*
+!.reg/expected
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
