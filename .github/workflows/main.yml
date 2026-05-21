@@ -40,7 +40,7 @@ jobs:
             - name: Build widgets
               run: npm run build
             - name: Build Storybook
-              run: npm run build-storybook
+              run: npm run build-sb
 
     screenshot:
         name: Screenshot tests
