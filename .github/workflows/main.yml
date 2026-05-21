@@ -42,12 +42,24 @@ jobs:
             - name: Build Storybook
               run: npm run build-storybook
 
-    test:
-        name: Testing
+    screenshot:
+        name: Screenshot tests
         needs: build
         runs-on: ubuntu-latest
+        container:
+            image: ghcr.io/puppeteer/puppeteer:25.0.4
+            options: --cap-add=SYS_ADMIN
         steps:
             - name: Checkout
               uses: actions/checkout@v4
-            - name: Placeholder test
-              run: echo "No tests yet — placeholder step, always passes"
+            - name: Install dependencies
+              run: npm install
+            - name: Run visual regression
+              run: npm run vrt
+            - name: Upload VRT report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: vrt-report
+                  path: .reg
+                  if-no-files-found: error
