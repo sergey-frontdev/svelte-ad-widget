@@ -50,8 +50,14 @@ jobs:
             image: ghcr.io/puppeteer/puppeteer:25.0.4
             options: --user root --cap-add=SYS_ADMIN
         steps:
+            - name: Install git
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends git
             - name: Checkout
               uses: actions/checkout@v4
+            - name: Trust workspace
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
             - name: Install dependencies
               run: npm install
             - name: Run visual regression
