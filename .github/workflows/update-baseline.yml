@@ -11,7 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         container:
             image: ghcr.io/puppeteer/puppeteer:25.0.4
-            options: --cap-add=SYS_ADMIN
+            options: --user root --cap-add=SYS_ADMIN
         steps:
             - name: Install git
               run: |
