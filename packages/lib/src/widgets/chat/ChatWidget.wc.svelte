@@ -1,6 +1,7 @@
 <svelte:options tag="chat-widget" />
 
 <script lang="ts">
+	import "../../fonts";
 	import { onDestroy, tick } from "svelte";
 	import { createChat } from "./chatStore";
 	import Avatar from "./Avatar.svelte";
@@ -128,7 +129,7 @@
 		--amber-bright: #ffb52e;
 		--text: #ececef;
 		--text-dim: #9a9aa3;
-		font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+		font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 	}
 
 	* {

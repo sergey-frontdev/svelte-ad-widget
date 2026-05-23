@@ -22,6 +22,7 @@
 		"vrt:approve": "rm -rf .reg/expected && mkdir -p .reg/expected && cp -R __screenshots__/. .reg/expected/"
 	},
 	"devDependencies": {
+		"@fontsource/inter": "^5.2.8",
 		"@storybook/addon-essentials": "^7.6.24",
 		"@storybook/blocks": "^7.6.24",
 		"@storybook/svelte": "^7.6.24",
@@ -39,10 +40,10 @@
 		"svelte": "^3.52.0",
 		"svelte-check": "^3.0.3",
 		"svelte-preprocess": "^5.0.1",
-		"wait-on": "^7.2.0",
 		"tslib": "^2.4.0",
 		"typescript": "^4.6.4",
-		"vite": "^4.0.4"
+		"vite": "^4.0.4",
+		"wait-on": "^7.2.0"
 	},
 	"files": [
 		"dist/lib"
