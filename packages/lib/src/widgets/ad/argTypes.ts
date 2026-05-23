@@ -17,7 +17,9 @@ const common = {
 	legal: {
 		control: "text",
 		description: "Текст тултипа «О рекламодателе» целиком (юр. текст + ИНН + ID; переносы строк сохраняются)."
-	}
+	},
+	// Story-only flag (opens the tooltip on mount) — not a widget attribute.
+	openmenu: hidden
 } as const;
 
 // Desktop product card — promo (image/title/description/cta) props don't apply.

@@ -1,11 +1,16 @@
 <svelte:options tag={null} />
 
 <script lang="ts">
+	import { onMount, tick } from "svelte";
 	// Side-effect import registers the <ad-widget> custom element.
 	import "./AdWidget.wc.svelte";
 
 	export let theme: "light" | "dark" = "light";
 	export let variant: "long" | "short" | "mobile" = "long";
+	// Story-only: open the "О рекламодателе" tooltip on mount by clicking the
+	// widget's menu button inside its shadow DOM. The widget exposes no prop for
+	// this internal state, so we drive the real interaction instead.
+	export let openmenu = false;
 
 	// Promo card content (undefined → widget keeps its built-in default).
 	export let image: string | undefined = undefined;
@@ -24,16 +29,28 @@
 			([, v]) => v !== undefined && v !== ""
 		)
 	);
+
+	let widgetEl: HTMLElement;
+
+	onMount(async () => {
+		if (!openmenu) return;
+		// Wait for the custom element to upgrade and render its shadow DOM.
+		await tick();
+		const dots = widgetEl?.shadowRoot?.querySelector<HTMLButtonElement>(".bar-dots, .dots");
+		dots?.click();
+	});
 </script>
 
 <!--wants be with dark mode decorator-->
 <div class="stage" class:dark-bg={theme === "dark"}>
-	<ad-widget {...attrs} />
+	<ad-widget bind:this={widgetEl} {...attrs} />
 </div>
 
 <style>
 	.stage {
-		padding: 24px;
+		/* 40px (not 24) so the card/tooltip/badge box-shadows fall inside the
+		   captured stage box — VRT can then catch shadow regressions. */
+		padding: 40px;
 		display: inline-block;
 		border-radius: 12px;
 	}
