@@ -70,3 +70,6 @@ jobs:
                   path: .reg
                   include-hidden-files: true
                   if-no-files-found: error
+            - name: Gate on visual differences
+              if: always()
+              run: node scripts/vrt-gate.mjs
