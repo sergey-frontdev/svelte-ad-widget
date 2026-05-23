@@ -10,15 +10,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run preview` — Preview the built demo.
 - `npm run check` — Type-check Svelte + TS with `svelte-check`.
 - `npm run lint` / `npm run format` — Prettier check / write across the repo.
+- `npm run storybook` — Run Storybook dev server (port 6006) for developing/documenting widgets.
+- `npm run build-sb` / `npm run serve-sb` — Build static Storybook to `storybook-static/` / serve it on port 6006.
+- `npm run vrt` — Full visual regression run: build + serve Storybook, capture screenshots with storycap, then diff against the baseline with `reg-suit run`.
+- `npm run vrt:capture` — Just capture screenshots into `__screenshots__/` (no diff).
+- `npm run vrt:approve` — Promote the current `__screenshots__/` to the committed baseline in `.reg/expected/`.
 
-There is no test runner configured.
+There is no unit test runner. The only automated test layer is the screenshot-based visual regression suite (see below).
 
 ## Architecture
 
-This is a Svelte 3 + Vite + TypeScript template that compiles Svelte components into framework-agnostic **custom elements (web components)**. The repo uses two parallel Vite configs and a `packages/` split:
+This is a Svelte 3 + Vite + TypeScript project (based on a web-components library template) that compiles Svelte components into framework-agnostic **custom elements (web components)**. The shipped product is a set of embeddable ad/chat widgets. The repo uses two parallel Vite configs and a `packages/` split:
 
-- `packages/lib/` — Library source. Entry is `packages/lib/index.ts`, which re-exports every component intended for distribution. Components destined to become custom elements use the `.wc.svelte` extension and declare their tag via `<svelte:options tag="..." />` (e.g. `MyComponent.wc.svelte` → `<my-component>`).
+- `packages/lib/` — Library source. Entry is `packages/lib/index.ts`, which re-exports every widget intended for distribution. Widgets live one-per-folder under `packages/lib/src/widgets/` and use the `.wc.svelte` extension, declaring their tag via `<svelte:options tag="..." />` (e.g. `AdWidget.wc.svelte` → `<ad-widget>`, `ChatWidget.wc.svelte` → `<chat-widget>`).
 - `packages/demo/` — A Svelte SPA used to develop/test the library. It imports `../../lib` directly so changes are picked up live.
+
+### Widgets
+
+- **AdWidget** (`<ad-widget>`, `src/widgets/ad/`) — Russian-language ad card. Props (lowercase attributes): `theme` (`light`/`dark`), `variant` (`long`/`short` desktop product cards, `mobile` promo card), plus per-attribute content overrides (`href`, `domain`, `legal`, `image`, `title`, `description`, `cta`). Defaults come from `adContent.ts`; only set overrides are applied. The "О рекламодателе" tooltip is internal state with no prop.
+- **ChatWidget** (`<chat-widget>`, `src/widgets/chat/`) — Chat bubble UI. Has internal child components (`Avatar.svelte`, `Message.svelte`) and a `chatStore.ts` store. Demo Q&A data in `carQA.ts`.
+- Internal/child components use the plain `.svelte` extension (not exported, not compiled as custom elements).
 
 ### Two-pass Svelte plugin
 
@@ -36,6 +47,19 @@ Both `vite.config.ts` and `vite.demo.config.ts` register the `@sveltejs/vite-plu
 - `root` is `packages/demo/`, output is `dist/demo/`.
 - The `.wc.svelte` plugin pass sets `customElement: true` so the demo registers actual custom elements at runtime. HMR is disabled in both passes.
 - `resolve.dedupe: ["svelte"]` is required because the demo and the lib both pull in Svelte.
+
+### Storybook (`.storybook/`)
+
+- Storybook 7 + `@storybook/svelte-vite`. Stories are `packages/**/*.stories.@(js|ts|svelte)`.
+- The framework injects a single Svelte plugin that compiles everything as normal components, so `<svelte:options tag=...>` on `.wc.svelte` is ignored. `.storybook/main.ts`'s `viteFinal` strips that plugin and re-adds the **same two-pass setup** the lib build uses, so custom elements actually register inside Storybook. Preserve this when touching Storybook config.
+- Stories render through a `*.story.svelte` wrapper (e.g. `AdWidget.story.svelte`) — it side-effect-imports the `.wc.svelte` to register the element, forwards only set attributes, and can drive internal interactions (e.g. `openmenu` clicks the tooltip button in the shadow DOM on mount). `argTypes.ts` defines the Storybook controls.
+
+### Visual regression testing (VRT)
+
+- Powered by **storycap** (Puppeteer screenshots) + **reg-suit** (diffing). Config in `regconfig.json` (`matchingThreshold: 0.05`, `thresholdRate: 0.01`). Baseline images are committed under `.reg/expected/`; fresh captures land in `__screenshots__/`.
+- `scripts/storycap.mjs` resolves the pinned Chromium via `puppeteer.executablePath()` and passes it as `--chromiumPath` (storycap v4's `--chromiumChannel puppeteer` is broken against puppeteer 25). It captures against the **static** Storybook build served on :6006 (not `storybook dev`, whose client redirect breaks Puppeteer's context).
+- Per-story screenshot params (`viewports`, `fullPage`, `layout: fullscreen`) live in each `.stories.ts` `parameters`. The `.story.svelte` stage padding (40px) is intentional so box-shadows fall inside the captured box and VRT catches shadow regressions.
+- CI (`.github/workflows/main.yml`): lint → build → screenshot job runs `npm run vrt` in the `ghcr.io/puppeteer/puppeteer:25.0.4` container and uploads the `.reg` report artifact. `update-baseline.yml` is a manual `workflow_dispatch` that re-captures, promotes to baseline, and commits.
 
 ### Web component conventions (from README)
 
