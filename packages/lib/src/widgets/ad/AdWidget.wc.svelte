@@ -1,6 +1,7 @@
 <svelte:options tag="ad-widget" />
 
 <script lang="ts">
+	import "../../fonts";
 	import { adContent } from "./adContent";
 
 	// Props (lowercase — HTML attributes can't be camelCase on custom elements)
@@ -163,6 +164,7 @@
 		display: inline-block;
 		background: transparent;
 		font-family:
+			"Inter",
 			system-ui,
 			-apple-system,
 			"Segoe UI",

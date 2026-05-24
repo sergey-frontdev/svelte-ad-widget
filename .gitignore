@@ -16,6 +16,7 @@ TODO
 # Storybook / visual regression
 storybook-static
 __screenshots__
+reports
 # reg-suit working dir — keep only the committed baseline (expected)
 .reg/*
 !.reg/expected
