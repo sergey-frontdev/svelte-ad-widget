@@ -1,0 +1,16 @@
+# Pinned environment for the visual regression suite — identical to GitHub CI.
+# Keep this base tag in sync with .github/workflows/main.yml and
+# update-baseline.yml; it is the single source of truth for the VRT runtime.
+#
+# Why bake dependencies into the image: Docker's layer cache then decides when
+# to reinstall — the `npm ci` layer is only re-run when package.json or
+# package-lock.json change (they invalidate the COPY below). This replaces any
+# hand-rolled "did the lockfile change?" logic. The BuildKit cache mount keeps
+# npm's download cache across rebuilds, so even a reinstall is mostly offline.
+FROM ghcr.io/puppeteer/puppeteer:25.0.4
+
+USER root
+WORKDIR /work
+
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci

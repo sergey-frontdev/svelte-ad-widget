@@ -1,0 +1,24 @@
+# Runtime config for the visual regression suite. Pairs with Dockerfile.vrt
+# (which bakes in dependencies). Driven by the npm scripts:
+#   npm run vrt:docker          → full run + diff (same pixels as CI)
+#   npm run vrt:approve:docker  → re-capture and promote the baseline
+services:
+    vrt:
+        build:
+            context: .
+            dockerfile: Dockerfile.vrt
+        # Match GitHub ubuntu-latest (amd64). On Apple Silicon this runs under
+        # qemu emulation, which keeps font rasterization identical to CI.
+        platform: linux/amd64
+        # Chromium's sandbox needs these, same as the CI screenshot job.
+        user: root
+        cap_add:
+            - SYS_ADMIN
+        working_dir: /work
+        volumes:
+            # Bind the repo so captures and diffs are written back to the host.
+            - .:/work
+            # Mask the host's node_modules (macOS-native, would crash Chromium)
+            # with the image's baked Linux ones. An empty mount here shadows the
+            # bind above; Docker seeds it from the image layer on creation.
+            - /work/node_modules

@@ -19,7 +19,9 @@
 		"serve-sb": "http-server storybook-static -p 6006",
 		"vrt:capture": "npm run build-sb && concurrently --kill-others --success command-1 --names serve,cap \"npm run serve-sb\" \"wait-on http://localhost:6006 && node scripts/storycap.mjs\"",
 		"vrt": "npm run vrt:capture && reg-suit run",
-		"vrt:approve": "rm -rf .reg/expected && mkdir -p .reg/expected && cp -R __screenshots__/. .reg/expected/"
+		"vrt:approve": "rm -rf .reg/expected && mkdir -p .reg/expected && cp -R __screenshots__/. .reg/expected/",
+		"vrt:docker": "docker compose -f docker-compose.vrt.yml run --rm --build vrt npm run vrt",
+		"vrt:approve:docker": "docker compose -f docker-compose.vrt.yml run --rm --build vrt bash -lc \"npm run vrt:capture && npm run vrt:approve\""
 	},
 	"devDependencies": {
 		"@fontsource/inter": "^5.2.8",

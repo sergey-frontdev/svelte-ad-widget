@@ -34,6 +34,30 @@ This will build the demo application located in the `demo/` folder, in which you
 
 If you need unit tests, you can take a look at [Jest](https://jestjs.io) and [Jest testing library](https://github.com/testing-library/svelte-testing-library).
 
+### Visual regression testing (VRT)
+
+Widget screenshots are diffed against a committed baseline (`.reg/expected/`) with
+[storycap](https://github.com/reg-viz/storycap) + [reg-suit](https://github.com/reg-viz/reg-suit).
+
+**Always run VRT in the container — never natively.** The baseline must be captured in the exact
+environment GitHub CI uses, otherwise the run produces false diffs. Even though the widgets bundle
+the Inter font (so the _typeface_ is identical everywhere), the _rasterizer_ is not: macOS
+(CoreText) and the Linux CI container (FreeType) anti-alias glyphs differently, so text shows up
+as a diff. `Dockerfile.vrt` + `docker-compose.vrt.yml` pin both the image
+(`ghcr.io/puppeteer/puppeteer:25.0.4`) and the platform (`linux/amd64`, matching `ubuntu-latest`),
+so a local run produces the same pixels as CI.
+
+```bash
+# Requires Docker Desktop running.
+npm run vrt:docker          # full run + diff (same as CI)
+npm run vrt:approve:docker  # re-capture and promote to baseline, then commit .reg/expected
+```
+
+`Dockerfile.vrt` bakes dependencies into the image, so Docker's layer cache reinstalls only when
+`package*.json` change; the `--build` flag in the scripts keeps the image current (a no-op when
+nothing changed). The bare `npm run vrt` / `npm run vrt:approve` scripts run natively and are only
+used _inside_ the container (and by CI) — don't use them to approve a baseline from macOS.
+
 ### Using the built web components with the demo app
 
 The demo application is provided for development and testing of your components, that's why it imports the `.svelte` files from the `lib/` folder directly by default.

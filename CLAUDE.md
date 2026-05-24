@@ -12,9 +12,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` / `npm run format` — Prettier check / write across the repo.
 - `npm run storybook` — Run Storybook dev server (port 6006) for developing/documenting widgets.
 - `npm run build-sb` / `npm run serve-sb` — Build static Storybook to `storybook-static/` / serve it on port 6006.
-- `npm run vrt` — Full visual regression run: build + serve Storybook, capture screenshots with storycap, then diff against the baseline with `reg-suit run`.
+- `npm run vrt:docker` — **Preferred VRT entry point.** Runs the full visual regression suite inside the pinned CI container (`ghcr.io/puppeteer/puppeteer:25.0.4`, `--platform linux/amd64`) defined by `Dockerfile.vrt` + `docker-compose.vrt.yml`, so screenshots match GitHub CI byte-for-byte. Requires Docker.
+- `npm run vrt:approve:docker` — Re-capture and promote the baseline inside the same container. Use this (not the bare `vrt:approve`) to regenerate `.reg/expected/`, then commit it.
+- `npm run vrt` — Full visual regression run: build + serve Storybook, capture screenshots with storycap, then diff against the baseline with `reg-suit run`. Runs natively — only meaningful **inside** the container (or in CI); a native macOS run produces false font-rasterization diffs.
 - `npm run vrt:capture` — Just capture screenshots into `__screenshots__/` (no diff).
-- `npm run vrt:approve` — Promote the current `__screenshots__/` to the committed baseline in `.reg/expected/`.
+- `npm run vrt:approve` — Promote the current `__screenshots__/` to the committed baseline in `.reg/expected/`. Native; prefer `vrt:approve:docker`.
 
 There is no unit test runner. The only automated test layer is the screenshot-based visual regression suite (see below).
 
@@ -57,6 +59,8 @@ Both `vite.config.ts` and `vite.demo.config.ts` register the `@sveltejs/vite-plu
 ### Visual regression testing (VRT)
 
 - Powered by **storycap** (Puppeteer screenshots) + **reg-suit** (diffing). Config in `regconfig.json` (`matchingThreshold: 0.05`, `thresholdRate: 0.01`). Baseline images are committed under `.reg/expected/`; fresh captures land in `__screenshots__/`.
+- **Environment matters: always run VRT in the container.** The baseline must come from the same image+arch as CI. `Dockerfile.vrt` bakes deps into an image based on `ghcr.io/puppeteer/puppeteer:25.0.4` (Docker layer cache + a BuildKit npm cache mount handle reinstalls — only on `package*.json` change); `docker-compose.vrt.yml` runs it pinned to `platform: linux/amd64` (matching `ubuntu-latest`), bind-mounts the repo and masks the host's macOS-native `node_modules` with the image's baked Linux ones (an empty anonymous volume on `/work/node_modules`). Keep the base image tag in `Dockerfile.vrt` in sync with the two workflow files. The bundled Inter font (`packages/lib/src/fonts.ts`) fixes the typeface but **not** the rasterizer — macOS CoreText vs Linux FreeType anti-alias differently, so a natively-captured baseline shows false text diffs against CI.
+- `.storybook/preview.ts` registers a global `waitForFonts` (resolving `document.fonts.ready`) referenced via `parameters.screenshot.waitFor`, so captures block on web-font loading and don't flake on `font-display: swap` falling back.
 - `scripts/storycap.mjs` resolves the pinned Chromium via `puppeteer.executablePath()` and passes it as `--chromiumPath` (storycap v4's `--chromiumChannel puppeteer` is broken against puppeteer 25). It captures against the **static** Storybook build served on :6006 (not `storybook dev`, whose client redirect breaks Puppeteer's context).
 - Per-story screenshot params (`viewports`, `fullPage`, `layout: fullscreen`) live in each `.stories.ts` `parameters`. The `.story.svelte` stage padding (40px) is intentional so box-shadows fall inside the captured box and VRT catches shadow regressions.
 - CI (`.github/workflows/main.yml`): lint → build → screenshot job runs `npm run vrt` in the `ghcr.io/puppeteer/puppeteer:25.0.4` container and uploads the `.reg` report artifact. `update-baseline.yml` is a manual `workflow_dispatch` that re-captures, promotes to baseline, and commits.
