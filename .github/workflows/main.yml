@@ -46,22 +46,36 @@ jobs:
         name: Screenshot tests
         needs: build
         runs-on: ubuntu-latest
-        container:
-            image: ghcr.io/puppeteer/puppeteer:25.0.4
-            options: --user root --cap-add=SYS_ADMIN
         steps:
-            - name: Install git
-              run: |
-                  apt-get update
-                  apt-get install -y --no-install-recommends git
             - name: Checkout
               uses: actions/checkout@v4
-            - name: Trust workspace
-              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-            - name: Install dependencies
-              run: npm install
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+            # Build the VRT image (Dockerfile.vrt) and cache its layers in the
+            # GitHub Actions cache. The `npm ci` layer (baked node_modules) and
+            # the base image are restored from cache when package*.json and the
+            # Dockerfile are unchanged, so dependencies aren't reinstalled and
+            # Chromium isn't re-downloaded.
+            - name: Build VRT image
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: Dockerfile.vrt
+                  tags: svelte-ad-widget-vrt:ci
+                  load: true
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+            # Run the suite in the freshly built image. Bind-mount the workspace
+            # so `.reg` is written back to the runner for the gate/artifact
+            # steps; mask node_modules with an empty volume so the image's baked
+            # Linux deps are used instead of the empty checkout dir.
             - name: Run visual regression
-              run: npm run vrt
+              run: |
+                  docker run --rm \
+                    --user root --cap-add=SYS_ADMIN \
+                    -v "$PWD:/work" -v /work/node_modules \
+                    -w /work \
+                    svelte-ad-widget-vrt:ci npm run vrt
             - name: Upload VRT report
               if: always()
               uses: actions/upload-artifact@v4

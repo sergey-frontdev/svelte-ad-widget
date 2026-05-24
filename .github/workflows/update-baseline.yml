@@ -9,24 +9,29 @@ jobs:
     update-baseline:
         name: Capture and commit baseline
         runs-on: ubuntu-latest
-        container:
-            image: ghcr.io/puppeteer/puppeteer:25.0.4
-            options: --user root --cap-add=SYS_ADMIN
         steps:
-            - name: Install git
-              run: |
-                  apt-get update
-                  apt-get install -y --no-install-recommends git
             - name: Checkout
               uses: actions/checkout@v4
-            - name: Trust workspace
-              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-            - name: Install dependencies
-              run: npm install
-            - name: Capture screenshots
-              run: npm run vrt:capture
-            - name: Promote to baseline
-              run: npm run vrt:approve
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+            - name: Build VRT image
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: Dockerfile.vrt
+                  tags: svelte-ad-widget-vrt:ci
+                  load: true
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+            # Capture and promote inside the same image CI uses for diffing, so
+            # the baseline is produced in the identical environment.
+            - name: Capture and promote baseline
+              run: |
+                  docker run --rm \
+                    --user root --cap-add=SYS_ADMIN \
+                    -v "$PWD:/work" -v /work/node_modules \
+                    -w /work \
+                    svelte-ad-widget-vrt:ci bash -lc "npm run vrt:capture && npm run vrt:approve"
             - name: Commit updated baseline
               run: |
                   git config user.name "github-actions[bot]"

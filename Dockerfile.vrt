@@ -12,5 +12,12 @@ FROM ghcr.io/puppeteer/puppeteer:25.0.4
 USER root
 WORKDIR /work
 
+# The base image bakes Chromium under pptruser's home, but this stage runs as
+# root (HOME=/root), so without this puppeteer's install step would re-download
+# the browser. Point it at the baked copy — for puppeteer 25.0.4 the versions
+# match, so `npm ci` reuses it and downloads nothing. storycap's
+# `puppeteer.executablePath()` reads the same env at runtime.
+ENV PUPPETEER_CACHE_DIR=/home/pptruser/.cache/puppeteer
+
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
